@@ -39,7 +39,6 @@ TB_USERNAME=your_twoblade_account_username
 TB_PASSWORD=your_twoblade_account_password
 GEMINI_API_KEY=your_api_key
 ```
-
 !!don't use SPACES!!!
 
 ### How to get the values
@@ -66,7 +65,7 @@ this will start this: nodemon --watch nothing --ext xyz index.js
 ## Project Structure
 
 ```
-.
+root-bot
 ├── .env
 ├── main/
     ├── bot.js
