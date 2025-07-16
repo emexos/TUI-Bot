@@ -3,7 +3,7 @@
 /*
 
   by emexAP - 16/7/2025
-  ---
+  ─────────────────────
   This code is still in development, so bugs may occur.
   English might not be perfect – I'm a German.
   Also, the TUI is still a bit buggy!
@@ -124,6 +124,7 @@ process.on("uncaughtException", (err) => {
       input: process.stdin,
       output: process.stdout,
       prompt: "",
+      terminal: false
     });
 
     const DIVIDER = "─".repeat(33);
@@ -152,51 +153,43 @@ process.on("uncaughtException", (err) => {
     showDividerPrompt();
 
     rl.on("line", async (line) => {
+      console.clear();
+
+      const rows = process.stdout.rows || 24;  
+      const target = rows - 3;  
+      readline.clearLine(process.stdout, 0);  
+      readline.cursorTo(process.stdout, 0, target);
+
+      console.log(`Command: "${line.trim()}"                        `);
+
       const input = line.trim();
       const parts = input.split(/\s+/);
 
       if (parts[0] === "--update") {
         try {
-          execSync("git fetch", { stdio: "ignore" });
+          execSync("git fetch", {stdio:"ignore"});
           const available = parseInt(
-            execSync("git rev-list --count HEAD..origin/main", { stdio: "pipe" })
-              .toString().trim(),
-            10
+            execSync("git rev-list --count HEAD..origin/main", {stdio:"pipe"})
+            .toString().trim(),10
           );
-
-
           if (parts.includes("-i")) {
             const status = execSync("git status --porcelain").toString().trim();
-            if (status) {
-              try {
-                execSync('git stash push --include-untracked -m "update-stash"', { stdio: "ignore" });
-              } catch { }
-            }
-
-            const pullOutput = execSync("git pull", { stdio: "pipe" }).toString();
-
-            if (status) {
-              try {
-                execSync("git stash pop", { stdio: "ignore" });
-              } catch {
-                
-              }
-            }
-
-            const warnings = (pullOutput.match(/warning:/g) || []).length;
-            const errors   = (pullOutput.match(/error:/g)   || []).length;
-            console.log(`-> Update applied: ${available} updates, ${warnings} warnings, ${errors} errors.`);
+            if (status) execSync('git stash push --include-untracked -m "update-stash"',{stdio:"ignore"});
+            const pullOutput = execSync("git pull", {stdio:"pipe"}).toString();
+            if (status) execSync("git stash pop",{stdio:"ignore"});
+            const warns = (pullOutput.match(/warning:/g)||[]).length;
+            const errs  = (pullOutput.match(/error:/g)||[]).length;
+            console.log(`-> Update applied: ${available} updates, ${warns} warnings, ${errs} errors.`);
           } else {
-            console.log(available > 0
+            console.log(available>0
               ? `-> ${available} updates available.`
               : "-> You are already on the latest version."
             );
           }
-        } catch (err) {
+        } catch(err) {
           console.error("-> Update failed:", err.message);
         }
-
-        console.log();
+        console.log(DIVIDER);
         showDividerPrompt();
         return;
       }
@@ -279,4 +272,3 @@ function showMessageBanner(title) {
   console.log(border);
   console.log(" ");
 }
-
