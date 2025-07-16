@@ -1,38 +1,28 @@
-// index.js
-
 /*
-
-  by emexAP - 16/7/2025
+  index.js by emexAP - 16/7/2025
   ─────────────────────
   This code is still in development, so bugs may occur.
   English might not be perfect – I'm a German.
   Also, the TUI is still a bit buggy!
-  
 */
 require("dotenv").config();
-const TwoBladeBot = require("./main/bot");
-const readline = require("readline");
-const fs       = require("fs");
-const path     = require("path");
-const settings = loadSettings();
+const TwoBladeBot   = require("./main/bot");
+const readline      = require("readline");
+const fs            = require("fs");
+const path          = require("path");
+const { execSync }  = require("child_process");
 
-const { execSync } = require("child_process");
-
-const MSG_PATH = path.join(__dirname, "msg.json");
+const MSG_PATH      = path.join(__dirname, "msg.json");
 const SETTINGS_PATH = path.join(__dirname, "settings.json");
-const USER_PATH = path.join(__dirname, "user.json");
+const settings      = loadSettings();
+const USER_PATH     = path.join(__dirname, "user.json");
 
-let startTime;
-if (settings.uptime && /^[0-9]{2}:[0-9]{2}:[0-9]{2}$/.test(settings.uptime)) {
-  const [h, m, s] = settings.uptime.split(":").map((n) => parseInt(n, 10));
-  const offsetMs = (h * 3600 + m * 60 + s) * 1000;
-  startTime = Date.now() - offsetMs;
-} else {
-  startTime = Date.now();
-  settings.uptime = "00:00:00";
-  saveSettings(settings);
-}
 
+settings.uptime = "00:00:00";
+saveSettings(settings);
+
+let startTime = Date.now();
+console.log("Start time set:", new Date(startTime).toLocaleString());
 console.log("Start time set:", new Date(startTime).toLocaleString());
 
 process.on("uncaughtException", (err) => {
@@ -61,7 +51,7 @@ process.on("uncaughtException", (err) => {
       if (isFirstStart) {
         setTimeout(() => {
           bot.sendMessage(settings.welcome);
-        }, 0); // if u want time out
+        }, 0); // if you want time out
         isFirstStart = false;
       }
     });
@@ -127,7 +117,7 @@ process.on("uncaughtException", (err) => {
       terminal: false
     });
 
-    const DIVIDER = "─".repeat(33);
+    const DIVIDER = "─".repeat(40);
 
     function showDividerPrompt() {
       const rows = process.stdout.rows || 30;
@@ -172,6 +162,9 @@ process.on("uncaughtException", (err) => {
             execSync("git rev-list --count HEAD..origin/main", {stdio:"pipe"})
             .toString().trim(),10
           );
+
+          console.log(`   version: ${settings.version}`);
+
           if (parts.includes("-i")) {
             const status = execSync("git status --porcelain").toString().trim();
             if (status) execSync('git stash push --include-untracked -m "update-stash"',{stdio:"ignore"});
@@ -180,10 +173,24 @@ process.on("uncaughtException", (err) => {
             const warns = (pullOutput.match(/warning:/g)||[]).length;
             const errs  = (pullOutput.match(/error:/g)||[]).length;
             console.log(`-> Update applied: ${available} updates, ${warns} warnings, ${errs} errors.`);
+
+            if (available > 0 && errs === 0 && /Fast-forward|Updating/.test(pullOutput)) {
+              const oldVersion = parseFloat(settings.version) || 0;
+              const newVersion = (oldVersion + 0.1).toFixed(1);
+              settings.version = newVersion;
+              saveSettings(settings);
+
+              console.log(`-> Version successfully upgraded to ${newVersion}`);
+            } else if (errs > 0) {
+              console.log("-> Update failed, version NOT changed!");
+            } else {
+              console.log("-> No new commits applied");
+            }
+            
           } else {
             console.log(available>0
               ? `-> ${available} updates available.`
-              : "-> You are already on the latest version."
+              : "-> You are already on the latest version"
             );
           }
         } catch(err) {
@@ -229,20 +236,36 @@ process.on("uncaughtException", (err) => {
 })();
 
 function loadSettings() {
+  const defaults = {
+    version: "2.2",
+    uptime: "00:00:00",
+    welcome: "Hello there!"
+  };
+
+  let current = {};
   try {
-    const raw = fs.readFileSync(SETTINGS_PATH, "utf8");
-    return JSON.parse(raw);
-  } catch {
-    return {};
+    current = JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf8"));
+  } catch (e) {
+    console.log("!!! settings.json not found or broken, creating new file... !!!");
   }
+
+  const merged = { ...defaults, ...current };
+
+  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(merged, null, 2), "utf8");
+
+  return merged;
 }
-function saveSettings(settings) {
-  fs.writeFileSync(
-    SETTINGS_PATH,
-    JSON.stringify(settings, null, 2),
-    "utf8"
-  );
+
+function saveSettings(newData) {
+  let current = {};
+  try {
+    current = JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf8"));
+  } catch {}
+
+  const merged = { ...current, ...newData };
+  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(merged, null, 2), "utf8");
 }
+
 function saveMessages(messages) {
   fs.writeFileSync(MSG_PATH, JSON.stringify(messages, null, 2), "utf8");
 }
