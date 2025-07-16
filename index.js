@@ -1,6 +1,6 @@
 /*
   index.js by emexAP - 16/7/2025
-  ─────────────────────
+  ---------------------
   This code is still in development, so bugs may occur.
   English might not be perfect – I'm a German.
   Also, the TUI is still a bit buggy!
