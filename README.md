@@ -1,4 +1,4 @@
-# TwoBlade Chatbot
+# TwoBlade - v2.2
 
 A Node.js-based bot for [TwoBlade](https://twoblade.com) that logs in automatically, connects to the WebSocket, and reacts to messages
 
