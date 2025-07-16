@@ -160,35 +160,43 @@ process.on("uncaughtException", (err) => {
           execSync("git fetch", { stdio: "ignore" });
           const available = parseInt(
             execSync("git rev-list --count HEAD..origin/main", { stdio: "pipe" })
-              .toString()
-              .trim(),
+              .toString().trim(),
             10
           );
-          
-          // this is for --update -i you can change "-i" to anything
+
+
           if (parts.includes("-i")) {
-            execSync('git stash save --include-untracked "update-stash"', { stdio: "ignore" });
+            const status = execSync("git status --porcelain").toString().trim();
+            if (status) {
+              try {
+                execSync('git stash push --include-untracked -m "update-stash"', { stdio: "ignore" });
+              } catch { }
+            }
+
             const pullOutput = execSync("git pull", { stdio: "pipe" }).toString();
-            execSync("git stash pop", { stdio: "ignore" });
+
+            if (status) {
+              try {
+                execSync("git stash pop", { stdio: "ignore" });
+              } catch {
+                
+              }
+            }
 
             const warnings = (pullOutput.match(/warning:/g) || []).length;
             const errors   = (pullOutput.match(/error:/g)   || []).length;
-
-            console.log(
-              `-> Update applied: ${available} updates installed, ` +
-              `${warnings} warnings, ${errors} errors.`
-            );
+            console.log(`-> Update applied: ${available} updates, ${warnings} warnings, ${errors} errors.`);
           } else {
-            if (available > 0) {
-              console.log(`-> ${available} updates available.`);
-            } else {
-              console.log("\n You are already on the latest version.");
-            }
+            console.log(available > 0
+              ? `-> ${available} updates available.`
+              : "-> You are already on the latest version."
+            );
           }
         } catch (err) {
           console.error("-> Update failed:", err.message);
         }
-        console.log("\n")
+
+        console.log();
         showDividerPrompt();
         return;
       }
