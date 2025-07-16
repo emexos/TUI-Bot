@@ -169,7 +169,8 @@ process.on("uncaughtException", (err) => {
       }
 
       if (!input.startsWith("--say ") ) {
-        showDividerPrompt();
+        //showDividerPrompt();
+        //testing update...
         return;
       }
       const text = input.slice(6);
