@@ -2,9 +2,11 @@
 require("dotenv").config();
 const TwoBladeBot = require("./main/bot");
 const readline = require("readline");
-const fs = require("fs");
-const path = require("path");
+const fs       = require("fs");
+const path     = require("path");
 const settings = loadSettings();
+
+const { execSync } = require("child_process");
 
 const MSG_PATH = path.join(__dirname, "msg.json");
 const SETTINGS_PATH = path.join(__dirname, "settings.json");
@@ -88,9 +90,9 @@ process.on("uncaughtException", (err) => {
       console.log(" ");
       console.log(border);
       console.log(           "|   NEW MESSAGE" .padEnd(frameWidth - 1) + "|");
-      console.log(formatLine( "   ID  " , msg.id       ));
-      console.log(formatLine( "   text" , shortText    ));
-      console.log(formatLine( "   User" , msg.fromUser ));
+      console.log(formatLine( "   ID   " , msg.id       ));
+      console.log(formatLine( "   text " , shortText    ));
+      console.log(formatLine( "   User " , msg.fromUser ));
       console.log(border);
       console.log(" ");
 
@@ -139,9 +141,34 @@ process.on("uncaughtException", (err) => {
 
     showDividerPrompt();
 
-    rl.on("line", async (line) => {
+    rl.on("line" , async (line) => {
       const input = line.trim();
-      if (!input.startsWith("--say ")) {
+      const parts = input.split(/\s+/);
+
+      if (parts[0] === "--update") {
+        try {
+          execSync("git fetch", { stdio: "ignore" });
+          if (parts.includes("-i")) {
+            execSync('git stash save --include-untracked "update-stash"', { stdio: "inherit" });
+            execSync("git pull", { stdio: "inherit" });
+            execSync("git stash pop", { stdio: "inherit" });
+            console.log("Update applied.");
+          } else {
+            const count = execSync("git rev-list --count HEAD..origin/main")
+              .toString()
+              .trim();
+            console.log(`${count} updates available.`);
+
+          }
+        } catch (err) {
+          console.error("Update failed:", err.message);
+        }
+
+        showDividerPrompt();
+        return;
+      }
+
+      if (!input.startsWith("--say ") ) {
         showDividerPrompt();
         return;
       }
