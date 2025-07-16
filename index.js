@@ -164,11 +164,9 @@ process.on("uncaughtException", (err) => {
               .trim(),
             10
           );
-
-          if (parts.includes(
-            // this is for --update -i you can change "-i" to anything
-            "-i"
-          ) ) {
+          
+          // this is for --update -i you can change "-i" to anything
+          if (parts.includes("-i")) {
             execSync('git stash save --include-untracked "update-stash"', { stdio: "ignore" });
             const pullOutput = execSync("git pull", { stdio: "pipe" }).toString();
             execSync("git stash pop", { stdio: "ignore" });
