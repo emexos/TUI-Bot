@@ -1,4 +1,14 @@
 // index.js
+
+/*
+
+  by emexAP - 16/7/2025
+  ---
+  This code is still in development, so bugs may occur.
+  English might not be perfect – I'm a German.
+  Also, the TUI is still a bit buggy!
+  
+*/
 require("dotenv").config();
 const TwoBladeBot = require("./main/bot");
 const readline = require("readline");
@@ -106,7 +116,7 @@ process.on("uncaughtException", (err) => {
     bot.on("disconnect", () => {
       clearLine();
       const timestamp = new Date().toLocaleString();
-      console.log(`# Bot disconnected at ${timestamp}.., going to sleep mode...`);
+      console.log(` Bot disconnected at ${timestamp} , going to sleep mode...`);
     });
 
     // -------------------------- CLI setup ------------------------------
@@ -141,37 +151,61 @@ process.on("uncaughtException", (err) => {
 
     showDividerPrompt();
 
-    rl.on("line" , async (line) => {
+    rl.on("line", async (line) => {
       const input = line.trim();
       const parts = input.split(/\s+/);
 
       if (parts[0] === "--update") {
         try {
           execSync("git fetch", { stdio: "ignore" });
-          if (parts.includes("-i")) {
-            execSync('git stash save --include-untracked "update-stash"', { stdio: "inherit" });
-            execSync("git pull", { stdio: "inherit" });
-            execSync("git stash pop", { stdio: "inherit" });
-            console.log("Update applied.");
-          } else {
-            const count = execSync("git rev-list --count HEAD..origin/main")
+          const available = parseInt(
+            execSync("git rev-list --count HEAD..origin/main", { stdio: "pipe" })
               .toString()
-              .trim();
-            console.log(`${count} updates available.`);
+              .trim(),
+            10
+          );
 
+          if (parts.includes(
+            // this is for --update -i you can change "-i" to anything
+            "-i"
+          ) ) {
+            execSync('git stash save --include-untracked "update-stash"', { stdio: "ignore" });
+            const pullOutput = execSync("git pull", { stdio: "pipe" }).toString();
+            execSync("git stash pop", { stdio: "ignore" });
+
+            const warnings = (pullOutput.match(/warning:/g) || []).length;
+            const errors   = (pullOutput.match(/error:/g)   || []).length;
+
+            console.log(
+              `-> Update applied: ${available} updates installed, ` +
+              `${warnings} warnings, ${errors} errors.`
+            );
+          } else {
+            if (available > 0) {
+              console.log(`-> ${available} updates available.`);
+            } else {
+              console.log("\n You are already on the latest version.");
+            }
           }
         } catch (err) {
-          console.error("Update failed:", err.message);
+          console.error("-> Update failed:", err.message);
         }
-
+        console.log("\n")
         showDividerPrompt();
         return;
       }
 
-      if (!input.startsWith("--say ") ) {
+      // NOTE:
+      // 
+      // The update system isn't working fine yet.
+      // Please just install important updates!
+      //
+
+      if (!input.startsWith("--say ")) {
         showDividerPrompt();
         return;
       }
+
       const text = input.slice(6);
       const message = ` ${text}`;
 
@@ -184,8 +218,10 @@ process.on("uncaughtException", (err) => {
       } catch (err) {
         console.error("Failed to send message:", err);
       }
+
       showDividerPrompt();
     });
+
     // ------------------------ end CLI ---------------------------
 
   } catch (err) {
@@ -237,3 +273,4 @@ function showMessageBanner(title) {
   console.log(border);
   console.log(" ");
 }
+
