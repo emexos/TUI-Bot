@@ -160,6 +160,28 @@ process.on("uncaughtException", (err) => {
       const parts = input.split(/\s+/);
 
       if (parts[0] === "--update") {
+        if (parts[1] === "showall") {
+          try {
+            execSync("git fetch", { stdio: "ignore" });
+            const logRaw = execSync("git log HEAD..origin/main --pretty=format:'%s||%b'", { stdio: "pipe" }).toString().trim();
+            if (!logRaw) {
+              console.log("-> No updates available");
+            } else {
+              console.log(`-> Updates available:`);
+              logRaw.split('\n').forEach(entry => {
+                const [subject, body] = entry.split('||');
+                console.log(`• ${subject}`);
+                if (body) body.split(/\r?\n/).forEach(l => console.log(`    ${l}`));
+              });
+            }
+          } catch (err) {
+            console.error("-> Failed to fetch updates:", err.message);
+          }
+          console.log(DIVIDER);
+          showDividerPrompt();
+          return;
+        }
+
         try {
           execSync("git fetch", {stdio:"ignore"});
           const available = parseInt(
@@ -204,12 +226,6 @@ process.on("uncaughtException", (err) => {
         showDividerPrompt();
         return;
       }
-
-      // NOTE:
-      // 
-      // The update system isn't working fine yet.
-      // Please just install important updates!
-      //
 
       if (!input.startsWith("--say ")) {
         showDividerPrompt();
