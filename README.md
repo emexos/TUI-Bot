@@ -1,4 +1,4 @@
-# TwoBlade - v2.2
+# TwoBlade - v2.3
 
 A Node.js-based bot for [TwoBlade](https://twoblade.com) that logs in automatically, connects to the WebSocket, and reacts to messages
 
@@ -81,3 +81,6 @@ if the bot was installed with
 git clone https://github.com/emexos/TUI-Bot.git
 ``` 
 then you can use ```--update``` to search for updates and to update instant run ```--update -i```
+
+
+by emexAP & gh
