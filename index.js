@@ -77,24 +77,28 @@ process.on("uncaughtException", (err) => {
 
       const frameWidth = 60;
       const formatLine = (label, value) => {
-        const content = `${label}: '${value}',`;
+        const content = `${label}: '${value}' `;
         const padding = frameWidth - content.length - 3;
-        return `|${content}${" ".repeat(Math.max(padding, 0))}|`;
+        return `│${content}${" ".repeat(Math.max(padding, 0))} │`;
       };
 
       const shortText =
         msg.text.length > 35 ? msg.text.substring(0, 35) + "..." : msg.text;
-      const border = "=".repeat(frameWidth);
+
+      const horizontal = "─".repeat(frameWidth - 2);
+      const topBorder = `╭${horizontal}╮`;
+      const bottomBorder = `╰${horizontal}╯`;
 
       console.clear();
       console.log(" ");
-      console.log(border);
-      console.log(           "|   NEW MESSAGE" .padEnd(frameWidth - 1) + "|");
-      console.log(formatLine( "   ID   " , msg.id       ));
-      console.log(formatLine( "   text " , shortText    ));
-      console.log(formatLine( "   User " , msg.fromUser ));
-      console.log(border);
+      console.log(topBorder);
+      console.log("│  NEW MESSAGE".padEnd(frameWidth - 1) + "│");
+      console.log(formatLine("  ID   ", msg.id));
+      console.log(formatLine("  text ", shortText));
+      console.log(formatLine("  User ", msg.fromUser,));
+      console.log(bottomBorder);
       console.log(" ");
+
 
       readline.cursorTo(process.stdout, 0, rows - 2);
       readline.clearScreenDown(process.stdout);
@@ -237,7 +241,7 @@ process.on("uncaughtException", (err) => {
 
 function loadSettings() {
   const defaults = {
-    version: "2.2",
+    version: "2.3",
     uptime: "00:00:00",
     welcome: "Hello there!"
   };
@@ -287,7 +291,7 @@ function saveUsers(userSet) {
   fs.writeFileSync(USER_PATH, JSON.stringify([...userSet], null, 2), "utf8");
 }
 function showMessageBanner(title) {
-  const border = "=".repeat(60);
+  const border = "─".repeat(60);
   console.clear();
   console.log(" ");
   console.log(border);
