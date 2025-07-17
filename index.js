@@ -93,9 +93,9 @@ process.on("uncaughtException", (err) => {
       console.log(" ");
       console.log(topBorder);
       console.log("│  NEW MESSAGE".padEnd(frameWidth - 1) + "│");
-      console.log(formatLine("  ID   ", msg.id));
       console.log(formatLine("  text ", shortText));
       console.log(formatLine("  User ", msg.fromUser,));
+      console.log(formatLine("  ID   ", msg.id));
       console.log(bottomBorder);
       console.log(" ");
 
