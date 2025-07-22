@@ -158,6 +158,30 @@ process.on("uncaughtException", (err) => {
 
       const input = line.trim();
       const parts = input.split(/\s+/);
+      
+      if (parts[0] === "--rl") {
+        console.log("-> Reloading bot connection...");
+        try {
+          if (typeof bot.disconnect === "function") {
+            bot.disconnect();
+            console.log("-> Bot disconnected...");
+          }
+          await new Promise(res => setTimeout(res, 1000));
+          await bot.start(username, password);
+          console.log("-> Bot reconnected successfully!");
+        } catch (err) {
+          console.error("-> Reload failed:", err);
+        }
+
+        console.log(DIVIDER);
+        showDividerPrompt();
+        return;
+      }
+      if (parts[0] === "--rs") {
+        console.log("-> Forcing nodemon restart...");
+        process.kill(process.pid, 'SIGUSR2');
+        return;
+      }
 
       if (parts[0] === "--update") {
         if (parts[1] === "showall") {
